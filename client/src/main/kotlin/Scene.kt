@@ -70,7 +70,7 @@ class Scene (
     val spawn = ArrayList<GameObject>()
     val killList = ArrayList<GameObject>()    
     gameObjects.forEach { 
-      if(!it.move(t, dt, keysPressed, gameObjects, spawn)){
+      if(!it.move(dt, t, keysPressed, gameObjects, spawn)){
         killList.add(it)
       }
     }

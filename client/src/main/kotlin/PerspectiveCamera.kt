@@ -20,7 +20,7 @@ class PerspectiveCamera(vararg programs : Program) : UniformProvider("camera") {
   var pitch = 0.0f
   var yaw = 0.0f
 
-  var fov = 1.0f 
+  var fov = 2
   var aspect = 1.0f
   var nearPlane = 0.1f
   var farPlane = 1000.0f 
@@ -52,6 +52,7 @@ class PerspectiveCamera(vararg programs : Program) : UniformProvider("camera") {
       rotate(roll).
       rotate(pitch, 1.0f, 0.0f, 0.0f).
       rotate(yaw, 0.0f, 1.0f, 0.0f)
+
     viewProjMatrix.set(rotationMatrix).
       translate(position).
       invert()
@@ -84,14 +85,13 @@ class PerspectiveCamera(vararg programs : Program) : UniformProvider("camera") {
       val backPosition = entity.position + (entity.up * sin(ang) * followRadius) + (-entity.ahead * cos(ang) * followRadius)
 
       position.set(position * (1-weight) + backPosition * weight)
-      lookAt(backPosition)
+      lookAt(entity.position)
 
       update()
   }
 
     fun lookAt(pos: Vec3) {
-        if((pos - position).lengthSquared() < .1f) return
-        ahead = (pos - position).normalize()
+        ahead = (position - pos).normalize()
         right = worldUp.cross(ahead).normalize()
         up = ahead.cross(right)
 
