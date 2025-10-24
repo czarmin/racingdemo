@@ -22,11 +22,13 @@ class Scene (
   val backgroundMesh = Mesh(backgroundMaterial, quadGeometry)
 
     val car = Car(gl)
+    val road = Road(gl)
 
   val gameObjects = ArrayList<GameObject>()
 
     init {
         gameObjects.add( car )
+        gameObjects.add( road )
     }
 
   val flipQuadGeometry = FlipQuadGeometry(gl)
@@ -37,6 +39,7 @@ class Scene (
         lights[0].powerDensity.set(1f, 1f, 0.9f);
     }
 
+    //val camera = FreeViewCamera(*Program.all)
     val camera = PerspectiveCamera(*Program.all)
 
   val timeAtFirstFrame = Date().getTime()
@@ -53,6 +56,9 @@ class Scene (
     camera.setAspectRatio(canvas.width.toFloat() / canvas.height.toFloat())
   }
 
+    var fps = 0f
+    var lastTime = 0
+
   fun update(gl : WebGL2RenderingContext, keysPressed : Set<String>) {
 
     val timeAtThisFrame = Date().getTime() 
@@ -60,7 +66,15 @@ class Scene (
     val t  = (timeAtThisFrame - timeAtFirstFrame).toFloat() / 1000.0f    
     timeAtLastFrame = timeAtThisFrame
 
+      fps += 1
+      if(t.toInt() != lastTime) {
+          lastTime = t.toInt()
+          console.log(fps)
+          fps = 0f
+      }
+
     camera.move(car, dt)
+      //camera.move(dt, keysPressed)
 
     // clear the screen
     gl.clearColor(0.3f, 0.0f, 0.3f, 1.0f)
@@ -69,11 +83,13 @@ class Scene (
 
     val spawn = ArrayList<GameObject>()
     val killList = ArrayList<GameObject>()    
-    gameObjects.forEach { 
+
+    gameObjects.forEach {
       if(!it.move(dt, t, keysPressed, gameObjects, spawn)){
         killList.add(it)
       }
     }
+
     killList.forEach{ gameObjects.remove(it) }
     spawn.forEach{ gameObjects.add(it) }
 

@@ -1,7 +1,13 @@
 
+import GameMath.intersectsCC
+import GameMath.intersectsCT
 import org.khronos.webgl.WebGLRenderingContext
+import vision.gears.webglmath.Vec2
 import vision.gears.webglmath.Vec3
+import kotlin.math.acos
 import kotlin.math.exp
+import kotlin.math.pow
+import kotlin.reflect.typeOf
 
 class Car(val gl: WebGL2RenderingContext): GameObject() {
 
@@ -19,9 +25,13 @@ class Car(val gl: WebGL2RenderingContext): GameObject() {
     }
     val meshes = jsonLoader.loadMeshes(gl, "media/chevy/chassis.json", material)
 
-    override val mass = 1f
+    override val mass = 1000f
 
     init {
+        position.set(100f, 0f, 0f)
+        scale.set(.05f, .05f, .05f)
+        capsule.height = 2f
+        capsule.radius = 1.5f
         setMeshes(*meshes)
 
         move = object : GameObject.Motion() {
@@ -32,12 +42,16 @@ class Car(val gl: WebGL2RenderingContext): GameObject() {
                 gameObjects: List<GameObject>,
                 spawn: List<GameObject>
             ): Boolean {
-                velocity *= exp(-dt * (1.3f / mass))
-                acceleration *= exp(-dt * (1.3f / mass))
-                angVelocity *= exp(-dt * (3f / mass))
+                velocity.y -= 1 * dt
+                velocity *= exp(-dt * (500f / mass))
+                acceleration *= exp(-dt * (500f / mass))
+                angVelocity *= exp(-dt * (5000f / mass))
+
+                capsule.axis.set(ahead)
+                capsule.center.set(position)
 
                 if("W" in keysPressed) {
-                    acceleration += ahead * 5f * mass;
+                    acceleration += ahead * 10f / mass;
                 }
                 if("A" in keysPressed) {
                     angVelocity.y += 4f *dt;
@@ -57,31 +71,23 @@ class Car(val gl: WebGL2RenderingContext): GameObject() {
                 velocity += acceleration * dt
                 angVelocity += angAcceleration * dt
 
-
-                var i = 0.0f
-                var done = false;
                 if(velocity.length() > 0f) {
-                while(i <= velocity.length() && !done) {
+                    val road = gameObjects[1] as Road
+                    val closest = road.closestPointToUp(position + velocity)
+                    if((road.valueAtFlat(closest) - Vec2(position.x, position.z)).lengthSquared() < (capsule.radius + road.WIDTH).pow(2)) {
+                        position.y = road.valueAt(closest).y
 
-                    for(obj in gameObjects) {
-                        if(obj == this@Car) continue;
+                        velocity.y = 0f
 
-                        if(capsule.intersects(obj.capsule)) {
-                            i -= velocity.length() / 5f
-                            done = true
-                            break
-                        }
+                        val ang = acos(road.normalAt(closest).dot(Y))
+                        euler.z = ang
                     }
-
-                    i += velocity.length() / 10.0f
-                }
-
                 }
                 position += velocity * dt
                 euler += angVelocity * dt
 
                 //console.log("POSITION: ${position.x} ${position.y} ${position.z}")
-                console.log("VEL: ${velocity.x} ${velocity.y} ${velocity.z}")
+                //console.log("VEL: ${velocity.x} ${velocity.y} ${velocity.z}")
                 //console.log("ACC: ${acceleration.x} ${acceleration.y} ${acceleration.z}")
 
                 return true;

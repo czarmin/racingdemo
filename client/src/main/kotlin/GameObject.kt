@@ -11,9 +11,9 @@ open class GameObject: UniformProvider("gameObject") {
     val Y = Vec3(0f, 1f, 0f)
     val Z = Vec3(1f, 0f, 0f)
 
-    val ahead = X
-    val up = Y
-    val right = Z
+    val ahead = X.clone()
+    val up = Y.clone()
+    val right = Z.clone()
 
   val position = Vec3()
   val euler = Vec3()

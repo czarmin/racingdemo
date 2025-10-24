@@ -1,3 +1,6 @@
+import GameMath.slerp
+import GameMath.smoothOverStep
+import GameMath.smoothStep
 import vision.gears.webglmath.UniformProvider
 import vision.gears.webglmath.Vec2
 import vision.gears.webglmath.Vec3
@@ -29,7 +32,7 @@ class PerspectiveCamera(vararg programs : Program) : UniformProvider("camera") {
   var right = Vec3(1.0f, 0.0f, 0.0f) 
   var up    = Vec3(0.0f, 1.0f, 0.0f)  
 
-  val followRadius = 100f;
+  val followRadius = 2f;
 
   var isDragging = false
   val mouseDelta = Vec2(0.0f, 0.0f) 
@@ -79,22 +82,28 @@ class PerspectiveCamera(vararg programs : Program) : UniformProvider("camera") {
 
   fun move(entity: GameObject, dt: Float) {
 
-      val weight = exp(-dt * 100f)
-
       val ang = PI.toFloat() / 4f
       val backPosition = entity.position + (entity.up * sin(ang) * followRadius) + (-entity.ahead * cos(ang) * followRadius)
 
-      position.set(position * (1-weight) + backPosition * weight)
-      lookAt(entity.position)
+      val t = exp(-dt * 100f)
+
+      position.set(smoothStep(position, backPosition, t))
+
+      lookAt(entity.position, dt)
 
       update()
   }
 
-    fun lookAt(pos: Vec3) {
-        ahead = (position - pos).normalize()
-        right = worldUp.cross(ahead).normalize()
-        up = ahead.cross(right)
+    fun lookAt(pos: Vec3, dt: Float) {
+        val weight = exp(-dt * 100f)
 
+        val newAhead = (position - pos).normalize()
+        val newRight = worldUp.cross(ahead).normalize()
+        val newUp = ahead.cross(right)
+
+        ahead = slerp(ahead, newAhead, weight)
+        right = slerp(right, newRight, weight)
+        up = slerp(up, newUp, weight)
         yaw = atan2(ahead.x, ahead.z);
         pitch = atan2(-ahead.y, sqrt(ahead.x*ahead.x + ahead.y*ahead.y))
 
