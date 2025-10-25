@@ -29,10 +29,23 @@ class Road(val gl: WebGL2RenderingContext) : GameObject() {
     fun valueAt(t: Float): Vec3 {
         return Vec3(SIZE* cos(t), HEIGHT * sin(3*t), SIZE * sin(t))
     }
+    fun directionAt(t: Float): Vec3 {
+        return Vec3(SIZE* -sin(t), HEIGHT * 3* cos(3*t), SIZE * cos(t)).normalize()
+    }
 
     fun normalAt(t: Float): Vec3 {
-        return Vec3(SIZE*-sin(t), HEIGHT * 3 * cos(3*t), SIZE * cos(t))
+        // FIX: Calculate the true surface normal (binormal)
+        val tangent = directionAt(t) // This is the 'ahead' vector
+        val worldUp = Vec3(0f, 1f, 0f)
+
+        // 1. Find the 'right' vector (90° to tangent and world up)
+        val right = worldUp.cross(tangent).normalize()
+
+        // 2. Find the 'up' vector (90° to tangent and right)
+        val up = tangent.cross(right).normalize()
+        return up
     }
+
 
     fun valueAtFlat(t: Float): Vec2 {
         return Vec2(SIZE* cos(t), SIZE * sin(t))
@@ -68,10 +81,11 @@ class Road(val gl: WebGL2RenderingContext) : GameObject() {
             val t = (i / SIZE) * 6.1f * PI.toFloat()
 
             val current = valueAt(t)
-            val ahead = (valueAt(t+STEP) - valueAt(t)).normalize()
+            val ahead = directionAt(t)
             val right = Vec3(0f, 1f, 0f).cross(ahead).normalize()
-            val up = ahead.cross(right).normalize()
+            val up = normalAt(t)
 
+            normals.add(up)
             normals.add(up)
             vertices.add(current + right * WIDTH)
             vertices.add(current - right * WIDTH)

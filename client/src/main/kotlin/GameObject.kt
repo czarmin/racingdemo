@@ -7,13 +7,13 @@ import kotlin.math.sin
 
 open class GameObject: UniformProvider("gameObject") {
 
-    val X = Vec3(0f, 0f, 1f)
+    val X = Vec3(1f, 0f, 0f)
     val Y = Vec3(0f, 1f, 0f)
-    val Z = Vec3(1f, 0f, 0f)
+    val Z = Vec3(0f, 0f, 1f)
 
-    val ahead = X.clone()
+    val ahead = Z.clone()
     val up = Y.clone()
-    val right = Z.clone()
+    val right = X.clone()
 
   val position = Vec3()
   val euler = Vec3()
@@ -31,6 +31,7 @@ open class GameObject: UniformProvider("gameObject") {
 
 
   val modelMatrix by Mat4()
+    val modelMatrixInverse by Mat4()
 
     fun collide(other: GameObject) {
 
@@ -49,10 +50,6 @@ open class GameObject: UniformProvider("gameObject") {
   open fun update() {
       capsule.center.set(position)
       capsule.axis.set(up)
-      val rotMatrix = Mat4().
-      rotate(euler.x, X).
-      rotate(euler.y, Y).
-      rotate(euler.z, Z)
 
     modelMatrix.set().
       scale(scale).
@@ -61,6 +58,8 @@ open class GameObject: UniformProvider("gameObject") {
     rotate(euler.z, Z).
       translate(position)
 
+
+      modelMatrixInverse.set(modelMatrix).invert()
 
       ahead.x = sin(euler.y) * cos(euler.z)
       ahead.y = -sin(euler.z)

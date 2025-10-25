@@ -23,12 +23,14 @@ class Scene (
 
     val car = Car(gl)
     val road = Road(gl)
+    val ball = Ball(gl)
 
   val gameObjects = ArrayList<GameObject>()
 
     init {
         gameObjects.add( car )
         gameObjects.add( road )
+        gameObjects.add( ball )
     }
 
   val flipQuadGeometry = FlipQuadGeometry(gl)
