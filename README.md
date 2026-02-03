@@ -1,5 +1,7 @@
 3D grafikus rendszerek HF3
 
+Build: gradlew jsRun
+
 Autós játék
 
 Irányítás:
