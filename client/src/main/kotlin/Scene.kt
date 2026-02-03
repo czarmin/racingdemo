@@ -3,6 +3,8 @@ import org.khronos.webgl.WebGLRenderingContext as GL
 import vision.gears.webglmath.UniformProvider
 import vision.gears.webglmath.Vec3
 import kotlin.js.Date
+import kotlin.math.PI
+import kotlin.random.Random
 
 class Scene (
   val gl : WebGL2RenderingContext) : UniformProvider("scene") {
@@ -33,7 +35,7 @@ class Scene (
         gameObjects.add( ball )
     }
 
-  val flipQuadGeometry = FlipQuadGeometry(gl)
+    var cooldown = 0f
 
     val lights = Array<Light>(1) { Light(it, *Program.all) }
     init{
@@ -77,6 +79,19 @@ class Scene (
 
     camera.move(car, dt)
       //camera.move(dt, keysPressed)
+
+      if("F" in keysPressed && cooldown <= 0f) {
+          val rand = Random.nextFloat()
+          val pos = road.valueAt(rand * 2f * PI.toFloat())
+          pos.apply { y += 5f }
+          val ball = Ball(gl).apply {
+              position.set(pos)
+              previousGuess = rand * 2f * PI.toFloat()
+          }
+          gameObjects.add(ball)
+          cooldown = 1f
+      }
+      cooldown -= dt
 
     // clear the screen
     gl.clearColor(0.3f, 0.0f, 0.3f, 1.0f)

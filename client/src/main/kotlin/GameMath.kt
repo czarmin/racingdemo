@@ -1,6 +1,10 @@
 import vision.gears.webglmath.Vec3
 import kotlin.math.acos
+import kotlin.math.max
 import kotlin.math.sin
+import kotlin.math.sqrt
+
+data class Intersection(val intersect: Boolean, val penetrationDepth: Float, val normal: Vec3)
 
 object GameMath {
 
@@ -114,25 +118,17 @@ object GameMath {
         return (s1 * (1-t) + s2 * t - p0).lengthSquared()
     }
 
-    fun intersectsCC(a:Capsule,b: Capsule): Boolean {
+    fun intersectsCC(a:Capsule,b: Capsule): Intersection {
 
-        val distSq = shortestVectorBetweenSegments(a.bottom , a.top , b.bottom, b.top).lengthSquared()
+        val vec = shortestVectorBetweenSegments(a.bottom , a.top , b.bottom, b.top)
+        val distSq = vec.lengthSquared()
         val radiusSUm = a.radius + b.radius
 
-        return distSq <= (radiusSUm * radiusSUm)
-
-    }
-
-    fun intersectsCT(a:Capsule, b: Triangle): Vec3? {
-        val aSide = distanceSqBetweenSegmentPoint(a.bottom, a.top, b.p1)
-        val bSide = distanceSqBetweenSegmentPoint(a.bottom, a.top, b.p2)
-        val cSide = distanceSqBetweenSegmentPoint(a.bottom, a.top, b.p3)
-
-        val radSq = a.radius * a.radius
-
-        if(aSide <= radSq || bSide <= radSq || cSide <= radSq) {
-            return b.normal
+        if(distSq <= (radiusSUm * radiusSUm)) {
+            return Intersection(true, radiusSUm - sqrt(distSq), vec.normalize())
+        } else {
+            return Intersection(false, -1f, Vec3.zeros)
         }
-        return null;
+
     }
 }

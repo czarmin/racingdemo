@@ -27,7 +27,7 @@ vec3 shade(
   vec3 normal, vec3 lightDir, vec3 viewDir,
   vec3 powerDensity, vec3 materialColor, vec3 specularColor, float shininess) {
 
-  float cosa = clamp(dot(normal, lightDir), 0.0, 1.0);
+  float cosa = clamp(dot(normal, lightDir), 0.1, 1.0);
   vec3 halfway = normalize(lightDir + viewDir);
   float cosDelta = clamp(dot(normal, halfway), 0.0, 1.0);
 

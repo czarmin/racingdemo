@@ -33,14 +33,64 @@ open class GameObject: UniformProvider("gameObject") {
   val modelMatrix by Mat4()
     val modelMatrixInverse by Mat4()
 
-    fun collide(other: GameObject) {
+    fun collide(other: GameObject, info: Intersection) {
 
-        val combined = velocity * mass + other.velocity * other.mass
-        val myVel = combined / mass;
-        val otherVel = combined / other.mass;
+        val normal = info.normal
 
-        velocity.set(myVel)
-        other.velocity.set(otherVel)
+        // How much the objects are overlapping
+        val penetrationDepth = info.penetrationDepth
+
+        // --- 3. Calculate Relative Velocity ---
+
+        // The velocity of 'other' relative to 'this'
+        val relativeVelocity = other.velocity - this.velocity
+
+        // The relative velocity along the collision normal (using dot product)
+        val velocityAlongNormal = relativeVelocity.dot(normal)
+
+        // If objects are already moving apart, do not apply impulse.
+        // This prevents them from being "pulled" back together.
+        if (velocityAlongNormal < 0) {
+            return
+        }
+
+        // --- 4. Calculate and Apply Impulse (The "Bounce") ---
+
+        // Combine the restitution (bounciness) of the two objects
+        val e = 0f
+
+        // Calculate the impulse scalar (j). This is the core physics formula.
+        val j = -(1 + e) * velocityAlongNormal
+
+        val totalInverseMass = 1f/mass + 1f/other.mass
+
+        // If both objects are immovable, we can't apply impulse
+        if (totalInverseMass <= 0) {
+            return
+        }
+
+        val impulseScalar = j / totalInverseMass
+
+        // The impulse vector is the scalar applied in the direction of the normal
+        val impulseVector = normal * impulseScalar
+
+        // Apply the impulse to each object's velocity
+        // (multiplied by inverse mass)
+        this.velocity -= impulseVector * 1f/mass
+        other.velocity += impulseVector * 1f/other.mass
+
+        // Percentage to correct (avoids jitter from 100% correction)
+        val correctionPercent = 0.4f
+        // A small allowance to prevent over-correction
+        val penetrationSlop = 0.01f
+
+        val correctionAmount = maxOf(penetrationDepth - penetrationSlop, 0.0f) / totalInverseMass
+        val correctionVector = normal * correctionAmount * correctionPercent
+
+/*
+        this.position -= correctionVector * 1f/mass
+        other.position += correctionVector * 1f/other.mass
+*/
     }
 
     fun setMeshes(vararg meshes: Mesh) {

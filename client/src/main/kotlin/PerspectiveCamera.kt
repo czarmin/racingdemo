@@ -85,7 +85,7 @@ class PerspectiveCamera(vararg programs : Program) : UniformProvider("camera") {
       val ang = PI.toFloat() / 4f
       val backPosition = entity.position + (entity.up * sin(ang) * followRadius) + (-entity.ahead * cos(ang) * followRadius)
 
-      val t = exp(-dt * 100f)
+      val t = exp(-dt * 100f * (1/ (backPosition - position).lengthSquared()))
 
       position.set(smoothStep(position, backPosition, t))
 

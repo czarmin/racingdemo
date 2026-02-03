@@ -60,9 +60,7 @@ void main(void) {
   modelPosition = vertexPosition;
   worldPosition = vertexPosition * gameObject.modelMatrix;
 
-  vec3 perturbed = vertexNormal + .1f * noiseGrad(5.0f * modelPosition.xyz);
-  worldNormal = gameObject.modelMatrixInverse * vec4(perturbed, 0);
-
+  worldNormal = gameObject.modelMatrixInverse * vec4(vertexNormal, 1);
 
   tex = vertexTexCoord;
 }

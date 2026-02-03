@@ -1,6 +1,5 @@
 
 import GameMath.intersectsCC
-import GameMath.intersectsCT
 import org.khronos.webgl.WebGLRenderingContext
 import vision.gears.webglmath.Vec2
 import vision.gears.webglmath.Vec3
@@ -32,6 +31,8 @@ class Car(val gl: WebGL2RenderingContext): GameObject() {
 
     override val mass = 500f
 
+    var previousGuess = 0f
+
     init {
         position.set(100f, 0f, 0f)
         scale.set(.05f, .05f, .05f)
@@ -47,7 +48,7 @@ class Car(val gl: WebGL2RenderingContext): GameObject() {
                 gameObjects: List<GameObject>,
                 spawn: List<GameObject>
             ): Boolean {
-                velocity.y -= 1 * dt
+                velocity.y -= 9.8f * dt
                 velocity *= exp(-dt * (500f / mass))
                 acceleration *= exp(-dt * (500f / mass))
                 angVelocity *= exp(-dt * (5000f / mass))
@@ -80,8 +81,9 @@ class Car(val gl: WebGL2RenderingContext): GameObject() {
 
                 if(velocity.length() > 0f) {
                     val road = gameObjects[1] as Road
-                    val closest = road.closestPointToUp(position)
-                    if((road.valueAtFlat(closest) - Vec2(position.x, position.z)).lengthSquared() < (capsule.radius + road.WIDTH).pow(2)) {
+                    val closest = road.closestPoint(position, previousGuess)
+                    previousGuess = closest
+                    if((road.valueAt(closest) - position).lengthSquared() < (capsule.radius + road.WIDTH/2f).pow(2)) {
                         // Snap position
                         position.y = road.valueAt(closest).y + .5f
                         velocity.y = 0f
@@ -101,6 +103,13 @@ class Car(val gl: WebGL2RenderingContext): GameObject() {
                         // Extract Pitch and Roll from new basis
                         euler.x = asin(-ahead.y)
                         euler.z = atan2(right.y, up.y)
+                    }
+                    for(obj in gameObjects) {
+                        if(obj == this@Car) continue
+                        val info = intersectsCC(capsule, obj.capsule)
+                        if(info.intersect) {
+                            collide(obj, info)
+                        }
                     }
                 }
 

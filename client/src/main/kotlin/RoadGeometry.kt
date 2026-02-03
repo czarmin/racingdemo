@@ -1,6 +1,8 @@
 import org.khronos.webgl.Float32Array
 import org.khronos.webgl.Uint16Array
+import org.khronos.webgl.Uint32Array
 import vision.gears.webglmath.Geometry
+import vision.gears.webglmath.Vec2
 import vision.gears.webglmath.Vec3
 import org.khronos.webgl.WebGLRenderingContext as GL
 
@@ -24,19 +26,31 @@ class RoadGeometry(val gl : WebGL2RenderingContext, val vertices : List<Vec3>, v
             GL.STATIC_DRAW)
     }
 
-    val indexBuffer = gl.createBuffer()
-    val indexCount = vertices.size - 2
+    val vertexTexCoordBuffer = gl.createBuffer()
     init{
-        val indices: MutableList<Short> = mutableListOf()
-        for(i in 0 .. indexCount-3){
-            indices.add(i.toShort())
-            indices.add((i+2).toShort())
-            indices.add((i+1).toShort())
+
+        val texCoords = mutableListOf<Float>()
+
+        for (i in 0 until vertices.size/2) {
+            texCoords.add(0f)
+            texCoords.add(i.toFloat())
+            texCoords.add(1f)
+            texCoords.add(i.toFloat())
         }
+
+        gl.bindBuffer(GL.ARRAY_BUFFER, vertexTexCoordBuffer)
+        gl.bufferData(GL.ARRAY_BUFFER,
+            Float32Array( texCoords.toTypedArray() ),
+            GL.STATIC_DRAW)
+    }
+
+    val indexBuffer = gl.createBuffer()
+    val indexCount = vertices.size
+    init{
 
         gl.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, indexBuffer)
         gl.bufferData(GL.ELEMENT_ARRAY_BUFFER,
-            Uint16Array(indices.toTypedArray()),
+            Uint32Array(vertices.indices.toList().toTypedArray()),
             GL.STATIC_DRAW)
     }
 
@@ -60,6 +74,16 @@ class RoadGeometry(val gl : WebGL2RenderingContext, val vertices : List<Vec3>, v
             0, //< tightly packed
             0 //< data starts at array start
         )
+
+        gl.bindBuffer(GL.ARRAY_BUFFER, vertexTexCoordBuffer)
+        gl.enableVertexAttribArray(2)
+        gl.vertexAttribPointer(2,
+            2, GL.FLOAT, //< two pieces of float
+            false, //< do not normalize (make unit length)
+            0, //< tightly packed
+            0 //< data starts at array start
+        )
+
         gl.bindVertexArray(null)
     }
 
@@ -67,7 +91,7 @@ class RoadGeometry(val gl : WebGL2RenderingContext, val vertices : List<Vec3>, v
         gl.bindVertexArray(inputLayout)
         gl.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, indexBuffer)
 
-        gl.drawElements(GL.TRIANGLES, indexCount, GL.UNSIGNED_SHORT, 0)
+        gl.drawElements(GL.TRIANGLE_STRIP, indexCount, GL.UNSIGNED_INT, 0)
     }
 
 
